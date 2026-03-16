@@ -417,6 +417,7 @@ document.addEventListener('DOMContentLoaded', function () {
         ],
         warlock: [
             { value: 'warlock_leveling', label: 'Warlock (Leveling)' },
+            { value: 'echoing_strikes', label: 'Warlock Echoing Strikes' },
         ],
         other: [
             { value: 'mule', label: 'Mule' },

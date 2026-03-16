@@ -383,6 +383,8 @@ type CharacterCfg struct {
 		WarlockLeveling struct {
 			UsePacketLearning bool `yaml:"use_packet_learning"`
 		} `yaml:"warlock_leveling"`
+		EchoingStrikes struct {
+		} `yaml:"echoing_strikes"`
 	} `yaml:"character"`
 
 	Game struct {

@@ -74,6 +74,8 @@ func BuildCharacter(ctx *context.Context) (context.Character, error) {
 		return &WarcryBarb{BaseCharacter: bc}, nil
 	case "whirlwind_barb":
 		return &WhirlwindBarb{BaseCharacter: bc}, nil
+	case "echoing_strikes":
+		return WarlockEchoingStrikes{BaseCharacter: bc}, nil
 	case "development":
 		return DevelopmentCharacter{BaseCharacter: bc}, nil
 	}

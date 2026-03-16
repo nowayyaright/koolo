@@ -21,7 +21,7 @@ import (
 var _ context.LevelingCharacter = (*WarlockLeveling)(nil)
 
 const (
-	warlockMaxAttacksLoop = 3
+	warlockMaxAttacksLoop = 15
 	warlockMinDistance    = 10
 	warlockMaxDistance    = 15
 	warlockDangerDistance = 4
@@ -33,11 +33,28 @@ type WarlockLeveling struct {
 }
 
 func (s WarlockLeveling) ShouldIgnoreMonster(m data.Monster) bool {
+	if m.IsPet() || m.IsMerc() || m.IsGoodNPC() || m.IsSkip() {
+		return true
+	}
+
+	// Warlock summons (Bind Demon) are not in d2go's IsPet() list
+	switch m.Name {
+	case npc.WarGoatman, npc.Tainted3, npc.WarDefiler:
+		return true
+	}
+	if m.States.HasState(state.BindDemonUnderling) {
+		return true
+	}
+
 	return false
 }
 
 func (s WarlockLeveling) CheckKeyBindings() []skill.ID {
+	lvl, _ := s.Data.PlayerUnit.FindStat(stat.Level, 0)
 	requireKeybindings := []skill.ID{}
+	if lvl.Value >= 49 {
+		requireKeybindings = append(requireKeybindings, skill.Abyss, skill.MiasmaChains, skill.BladeWarp)
+	}
 	missingKeybindings := []skill.ID{}
 
 	for _, cskill := range requireKeybindings {
@@ -60,6 +77,7 @@ func (s WarlockLeveling) KillMonsterSequence(
 	completedAttackLoops := 0
 	previousUnitID := 0
 	var lastReposition time.Time
+	var lastLethargy time.Time
 	for {
 		context.Get().PauseIfNotPriority()
 
@@ -125,6 +143,15 @@ func (s WarlockLeveling) KillMonsterSequence(
 			}
 		} else {
 			// Post-respec: Magic-focused build
+
+			// Cast Sigil: Lethargy on bosses/elites if not already debuffed
+			if s.Data.PlayerUnit.Skills[skill.SigilLethargy].Level > 0 && mana.Value > 5 &&
+				(monster.Type == data.MonsterTypeUnique || monster.Type == data.MonsterTypeSuperUnique) &&
+				!monster.States.HasState(state.Sigillethargy) && time.Since(lastLethargy) > time.Second*4 {
+				step.SecondaryAttack(skill.SigilLethargy, id, 1, step.Distance(warlockMinDistance, warlockMaxDistance))
+				lastLethargy = time.Now()
+			}
+
 			opts := []step.AttackOption{step.Distance(warlockMinDistance, warlockMaxDistance)}
 			if onCooldown {
 				if s.Data.PlayerUnit.Skills[skill.MiasmaChains].Level > 0 && mana.Value > 5 {
@@ -209,6 +236,8 @@ func (s WarlockLeveling) SkillsToBind() (skill.ID, []skill.ID) {
 			skill.Abyss,
 			skill.MiasmaChains,
 			skill.MiasmaBolt,
+			skill.SigilLethargy,
+			skill.BladeWarp,
 		}
 	}
 
@@ -310,6 +339,7 @@ func (s WarlockLeveling) SkillPoints() []skill.ID {
 func (s WarlockLeveling) killBoss(bossNPC npc.ID, timeout time.Duration) error {
 	s.Logger.Info(fmt.Sprintf("Starting kill sequence for %v...", bossNPC))
 	startTime := time.Now()
+	var lastBossLethargy time.Time
 	for {
 		context.Get().PauseIfNotPriority()
 
@@ -359,6 +389,13 @@ func (s WarlockLeveling) killBoss(bossNPC npc.ID, timeout time.Duration) error {
 				step.PrimaryAttack(boss.UnitID, 1, true, step.Distance(1, 3))
 			}
 		} else {
+			// Cast Sigil: Lethargy on boss if not already debuffed
+			if s.Data.PlayerUnit.Skills[skill.SigilLethargy].Level > 0 && mana.Value > 5 &&
+				!boss.States.HasState(state.Sigillethargy) && time.Since(lastBossLethargy) > time.Second*4 {
+				step.SecondaryAttack(skill.SigilLethargy, boss.UnitID, 1, step.Distance(10, 15))
+				lastBossLethargy = time.Now()
+			}
+
 			if onCooldown {
 				if s.Data.PlayerUnit.Skills[skill.MiasmaChains].Level > 0 && mana.Value > 5 {
 					step.SecondaryAttack(skill.MiasmaChains, boss.UnitID, 3, step.Distance(10, 15))

@@ -235,8 +235,8 @@ func MoveTo(dest data.Position, options ...MoveOption) error {
 			}
 		}
 
-		//If teleporting, sleep for the cast duration
-		if ctx.Data.CanTeleport() {
+		//If teleporting or blade warping, sleep for the cast duration
+		if ctx.Data.CanTeleport() || ctx.Data.CanBladeWarp() {
 			if time.Since(lastRun) < ctx.Data.PlayerCastDuration() {
 				time.Sleep(ctx.Data.PlayerCastDuration() - time.Since(lastRun))
 				continue
@@ -328,6 +328,10 @@ func MoveTo(dest data.Position, options ...MoveOption) error {
 		if ctx.Data.CanTeleport() {
 			if ctx.Data.PlayerUnit.RightSkill != skill.Teleport {
 				ctx.HID.PressKeyBinding(ctx.Data.KeyBindings.MustKBForSkill(skill.Teleport))
+			}
+		} else if ctx.Data.CanBladeWarp() {
+			if ctx.Data.PlayerUnit.RightSkill != skill.BladeWarp {
+				ctx.HID.PressKeyBinding(ctx.Data.KeyBindings.MustKBForSkill(skill.BladeWarp))
 			}
 		} else if isDragondin {
 			// Dragondin: keep Conviction active while moving (instead of Vigor).

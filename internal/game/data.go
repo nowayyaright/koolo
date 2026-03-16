@@ -135,6 +135,27 @@ func (d Data) CanTeleport() bool {
 	return (isTpBound || canUsePacketSkillSelection) && !d.PlayerUnit.Area.IsTown()
 }
 
+func (d Data) CanBladeWarp() bool {
+	// BladeWarp is a warlock semi-teleport: faster than running, can cross gaps, but can't pass walls
+	if d.PlayerUnit.Area.IsTown() {
+		return false
+	}
+
+	// Check if BladeWarp skill is bound
+	_, isBound := d.KeyBindings.KeyBindingForSkill(skill.BladeWarp)
+	if !isBound {
+		return false
+	}
+
+	// Check mana (need enough to cast)
+	currentMana, foundMana := d.PlayerUnit.FindStat(stat.Mana, 0)
+	if !foundMana || currentMana.Value < 5 {
+		return false
+	}
+
+	return true
+}
+
 func (d Data) PlayerCastDuration() time.Duration {
 	secs := float64(d.PlayerUnit.CastingFrames())*0.04 + 0.01
 	secs = math.Max(0.30, secs)
