@@ -77,6 +77,10 @@ func ClearAreaAroundPosition(pos data.Position, radius int, filters ...data.Mons
 		SortEnemiesByPriority(&enemies)
 
 		for _, m := range enemies {
+			if ctx.Char.ShouldIgnoreMonster(m) {
+				continue
+			}
+
 			distanceToTarget := pather.DistanceFromPoint(pos, m.Position)
 			if distanceToTarget > radius {
 				continue
