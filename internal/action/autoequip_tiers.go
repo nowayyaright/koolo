@@ -169,7 +169,7 @@ var (
 
 			stat.LifeSteal:     10.0,
 			stat.ManaSteal:     10.0,
-			stat.MaxMana:       1.0, //good for leveling
+			stat.MaxMana:       0.1, //good for leveling ring
 			stat.ChanceToBlock: -1.5,
 
 			stat.MaxDamage:          5.0,
@@ -183,7 +183,7 @@ var (
 			stat.LightningMaxDamage: 1.0,
 
 			stat.FireResist:      0.0, // 3
-			stat.ColdResist:      0.0, // 2
+			stat.ColdResist:      1.0, // 3
 			stat.LightningResist: 0.0, // 3
 			stat.PoisonResist:    0.5, // 1.5
 
