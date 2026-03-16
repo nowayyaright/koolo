@@ -51,7 +51,7 @@ func VendorRefill(opts VendorRefillOpts) (err error) {
 	if !opts.ForceRefill && !opts.BuyConsumables && !hasJunkToSell {
 		return nil
 	}
-	if !opts.ForceRefill && !hasJunkToSell && !shouldVisitVendor() && len(opts.LockConfig) == 0 {
+	if !opts.ForceRefill && !opts.BuyConsumables && !hasJunkToSell && !shouldVisitVendor() && len(opts.LockConfig) == 0 {
 		return nil
 	}
 
