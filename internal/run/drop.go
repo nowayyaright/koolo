@@ -308,8 +308,10 @@ func (d Drop) dropStashItems(ctx *context.Status) (int, error) {
 	for i := 0; i < sharedPages; i++ {
 		stashTabs[i+1] = i + 2 // Shared tabs start at 2
 	}
-	// Append DLC-only tabs (Gems=100, Materials=101, Runes=102)
-	stashTabs = append(stashTabs, action.StashTabGems, action.StashTabMaterials, action.StashTabRunes)
+	// Append DLC-only tabs (Gems=100, Materials=101, Runes=102) when DLC is active
+	if ctx.Data.IsDLC() {
+		stashTabs = append(stashTabs, action.StashTabGems, action.StashTabMaterials, action.StashTabRunes)
+	}
 
 	startTime := time.Now()
 	for pass := 0; pass < maxPasses; pass++ {
