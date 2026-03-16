@@ -467,7 +467,6 @@ var armoryImageFallbacks = map[string]string{
 	// Orbs (Sorceress)
 	"SagesOrb": "EagleOrb",
 	"MaelstromOrb": "EagleOrb",
-	"OccultCodex": "OccultCodex",
 	"JaredsStone": "SacredGlobe",
 	"ClaspedOrb": "SmokedSphere",
 	"SwirlCrystal": "SmokedSphere",

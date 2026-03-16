@@ -2561,13 +2561,6 @@
                     event.preventDefault();
                     toggleSelectionMode();
                 }
-                // 1-4 for stash tabs
-                if (event.key >= '1' && event.key <= '4') {
-                    const tabs = ['personal', 'shared1', 'shared2', 'shared3', 'shared4', 'shared5'];
-                    const tabIndex = parseInt(event.key) - 1;
-                    // tab buttons removed - stashes always visible
-                    if (tabBtn) tabBtn.click();
-                }
             }
         });
 
