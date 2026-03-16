@@ -437,6 +437,30 @@
             background: rgba(40, 40, 60, 0.9);
         }
 
+        .dlc-slot.selected {
+            outline: 2px solid #4CAF50 !important;
+            outline-offset: 1px;
+            box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
+        }
+
+        .dlc-slot.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: #4CAF50;
+            color: white;
+            font-size: 10px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+
         .dlc-slot-img {
             width: 30px;
             height: 30px;
