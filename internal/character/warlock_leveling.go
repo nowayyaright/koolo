@@ -107,6 +107,12 @@ func (s WarlockLeveling) KillMonsterSequence(
 			return nil
 		}
 
+		// Skip our own summons that may have slipped through the monster selector
+		if s.ShouldIgnoreMonster(monster) {
+			completedAttackLoops++
+			continue
+		}
+
 		lvl, _ := s.Data.PlayerUnit.FindStat(stat.Level, 0)
 		mana, _ := s.Data.PlayerUnit.FindStat(stat.Mana, 0)
 		onCooldown := s.Data.PlayerUnit.States.HasState(state.Cooldown)

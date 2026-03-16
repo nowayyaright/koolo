@@ -123,6 +123,12 @@ func (s WarlockEchoingStrikes) KillMonsterSequence(
 			return nil
 		}
 
+		// Skip our own summons that may have slipped through the monster selector
+		if s.ShouldIgnoreMonster(monster) {
+			completedAttackLoops++
+			continue
+		}
+
 		mana, _ := s.Data.PlayerUnit.FindStat(stat.Mana, 0)
 
 		// Reposition if enemies are too close
