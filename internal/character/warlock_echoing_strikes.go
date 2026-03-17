@@ -175,6 +175,12 @@ func (s WarlockEchoingStrikes) KillMonsterSequence(
 			s.Data.PlayerUnit.Skills[skill.BindDemon].Level > 0 {
 			manaCheck, _ := s.Data.PlayerUnit.FindStat(stat.Mana, 0)
 			if manaCheck.Value > 5 {
+				// Log all states and stats before binding for affix diagnostics
+				s.Logger.Info("Hephasto pre-bind diagnostics",
+					slog.Int("unitID", int(id)),
+					slog.Any("states", monster.States),
+					slog.Any("stats", monster.Stats),
+				)
 				s.Logger.Info("Casting Bind Demon on Hephasto", slog.Int("unitID", int(id)))
 				step.SecondaryAttack(skill.BindDemon, id, 1, step.Distance(echoingStrikesMinDistance, echoingStrikesMaxDistance))
 				hasBoundDemon = true
