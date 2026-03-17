@@ -201,7 +201,9 @@ func (pf *PathFinder) moveThroughPathBladeWarp(p Path) {
 				slog.Int("diffX", pos.X-fromX),
 				slog.Int("diffY", pos.Y-fromY),
 			)
-			pf.MoveCharacter(screenX, screenY)
+			// Click directly instead of going through MoveCharacter to avoid
+			// walk-path fallback limiting the distance
+			pf.hid.Click(game.RightButton, screenX, screenY)
 			return
 		}
 	}
@@ -283,10 +285,6 @@ func (pf *PathFinder) MoveCharacter(x, y int, gamePos ...data.Position) {
 		} else {
 			pf.hid.Click(game.RightButton, x, y)
 		}
-	} else if pf.data.CanBladeWarp() {
-		// BladeWarp: cast + projectile travel time before character warps
-		pf.hid.Click(game.RightButton, x, y)
-		utils.Sleep(800)
 	} else {
 		pf.hid.MovePointer(x, y)
 		pf.hid.PressKeyBinding(pf.data.KeyBindings.ForceMove)

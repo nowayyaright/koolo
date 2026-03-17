@@ -236,9 +236,16 @@ func MoveTo(dest data.Position, options ...MoveOption) error {
 		}
 
 		//If teleporting or blade warping, sleep for the cast duration
-		if ctx.Data.CanTeleport() || ctx.Data.CanBladeWarp() {
+		if ctx.Data.CanTeleport() {
 			if time.Since(lastRun) < ctx.Data.PlayerCastDuration() {
 				time.Sleep(ctx.Data.PlayerCastDuration() - time.Since(lastRun))
+				continue
+			}
+		} else if ctx.Data.CanBladeWarp() {
+			// BladeWarp needs longer delay: cast animation + projectile travel time
+			bladeWarpDuration := 800 * time.Millisecond
+			if time.Since(lastRun) < bladeWarpDuration {
+				time.Sleep(bladeWarpDuration - time.Since(lastRun))
 				continue
 			}
 		}
