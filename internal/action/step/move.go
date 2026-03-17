@@ -375,6 +375,14 @@ func MoveTo(dest data.Position, options ...MoveOption) error {
 		lastRun = time.Now()
 		previousPosition = ctx.Data.PlayerUnit.Position
 
+		if ctx.Data.CanBladeWarp() && len(path) > 0 {
+			lastPos := path[len(path)-1]
+			dx := lastPos.X - path[0].X
+			dy := lastPos.Y - path[0].Y
+			ctx.Logger.Info(fmt.Sprintf("BladeWarp path: len=%d farthest=(%d,%d) from=(%d,%d) diff=(%d,%d)",
+				len(path), lastPos.X, lastPos.Y, path[0].X, path[0].Y, dx, dy))
+		}
+
 		//Perform the movement
 		ctx.PathFinder.MoveThroughPath(path, walkDuration)
 	}
