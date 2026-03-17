@@ -31,13 +31,33 @@ const (
 var (
 	bindDemonBlacklist = make(map[data.UnitID]bool)
 	hasBoundDemon      bool
+	idealDemonFound    bool // true = stop seeking, good affixes (Aura Enchanted + Cursed) found
 )
 
-// ResetBindDemonState clears the Bind Demon blacklist and flag.
+// Aura states that indicate the "Aura Enchanted" super unique affix.
+var auraEnchantedStates = []state.State{
+	state.Might, state.Holyfire, state.Thorns, state.Defiance,
+	state.Blessedaim, state.Holywind, state.Holyshock,
+	state.Concentration, state.Fanaticism, state.Conviction,
+	state.Redemption, state.Sanctuary, state.Meditation,
+}
+
+// hasAuraEnchanted checks if a monster has any aura state indicating the Aura Enchanted affix.
+func hasAuraEnchanted(m data.Monster) bool {
+	for _, s := range auraEnchantedStates {
+		if m.States.HasState(s) {
+			return true
+		}
+	}
+	return false
+}
+
+// ResetBindDemonState clears the Bind Demon blacklist and flags.
 // Call this when the player dies and needs a new demon.
 func ResetBindDemonState() {
 	bindDemonBlacklist = make(map[data.UnitID]bool)
 	hasBoundDemon = false
+	idealDemonFound = false
 }
 
 type WarlockEchoingStrikes struct {
@@ -170,21 +190,42 @@ func (s WarlockEchoingStrikes) KillMonsterSequence(
 			continue
 		}
 
-		// Cast Bind Demon on Hephasto if we don't have an active bound demon
-		if !hasBoundDemon && monster.Name == npc.Hephasto &&
+		// Bind Demon on Hephasto:
+		// - No demon yet → bind immediately
+		// - Have demon but bad affixes → rebind next Hephasto encountered
+		// - Ideal demon found → skip Hephasto entirely
+		if monster.Name == npc.Hephasto && !idealDemonFound &&
 			s.Data.PlayerUnit.Skills[skill.BindDemon].Level > 0 {
 			manaCheck, _ := s.Data.PlayerUnit.FindStat(stat.Mana, 0)
 			if manaCheck.Value > 5 {
 				// Log all states and stats before binding for affix diagnostics
+				isAura := hasAuraEnchanted(monster)
 				s.Logger.Info("Hephasto pre-bind diagnostics",
 					slog.Int("unitID", int(id)),
+					slog.Bool("hasAuraEnchanted", isAura),
 					slog.Any("states", monster.States),
 					slog.Any("stats", monster.Stats),
 				)
+
 				s.Logger.Info("Casting Bind Demon on Hephasto", slog.Int("unitID", int(id)))
 				step.SecondaryAttack(skill.BindDemon, id, 1, step.Distance(echoingStrikesMinDistance, echoingStrikesMaxDistance))
 				hasBoundDemon = true
 				bindDemonBlacklist[id] = true
+
+				// Check if this Hephasto has ideal affixes
+				// Aura Enchanted is detectable via aura states.
+				// Cursed + Extra Fast need diagnostic data — for now check Aura Enchanted only.
+				// TODO: Add Cursed/Extra Fast detection once we confirm what stats/states they map to.
+				if isAura {
+					s.Logger.Info("Ideal Hephasto found (Aura Enchanted)! Stopping search.",
+						slog.Int("unitID", int(id)),
+					)
+					idealDemonFound = true
+				} else {
+					s.Logger.Info("Hephasto affixes not ideal, will seek better next game",
+						slog.Int("unitID", int(id)),
+					)
+				}
 				continue
 			}
 		}
