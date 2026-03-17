@@ -330,7 +330,6 @@ func EnsureSkillBindings() error {
 		SkillsToBind() (skill.ID, []skill.ID)
 	}); ok {
 		// Non-leveling character that still wants auto-binding (e.g. WarlockEchoingStrikes)
-		ctx.Logger.Info("EnsureSkillBindings: using SkillsToBind() fallback for non-leveling character")
 		mainSkill, skillsToBind = binder.SkillsToBind()
 	} else {
 		skillsToBind = ctx.Char.CheckKeyBindings()

@@ -168,15 +168,6 @@ func (pf *PathFinder) moveThroughPathBladeWarp(p Path) {
 	hudBoundary := int(float32(pf.gr.GameAreaSizeY) / 1.19)
 	fromX, fromY := p.From().X, p.From().Y
 
-	slog.Info("BladeWarp path info",
-		slog.Int("pathLen", len(p)),
-		slog.Int("fromX", fromX),
-		slog.Int("fromY", fromY),
-		slog.Int("gameAreaX", pf.gr.GameAreaSizeX),
-		slog.Int("gameAreaY", pf.gr.GameAreaSizeY),
-		slog.Int("hudBoundary", hudBoundary),
-	)
-
 	for i := len(p) - 1; i >= 0; i-- {
 		pos := p[i]
 		screenX, screenY := pf.gameCoordsToScreenCords(fromX, fromY, pos.X, pos.Y)
@@ -186,28 +177,12 @@ func (pf *PathFinder) moveThroughPathBladeWarp(p Path) {
 		}
 
 		if screenX >= 0 && screenY >= 0 && screenX <= pf.gr.GameAreaSizeX && screenY <= pf.gr.GameAreaSizeY {
-			// Calculate actual Euclidean tile distance from player
-			dx := float64(pos.X - fromX)
-			dy := float64(pos.Y - fromY)
-			tileDist := int(math.Sqrt(dx*dx + dy*dy))
-
-			slog.Info("BladeWarp casting",
-				slog.Int("pathIdx", i),
-				slog.Int("pathLen", len(p)),
-				slog.Int("tileDist", tileDist),
-				slog.Int("screenX", screenX),
-				slog.Int("screenY", screenY),
-				slog.Int("diffX", pos.X-fromX),
-				slog.Int("diffY", pos.Y-fromY),
-			)
 			// Click directly instead of going through MoveCharacter to avoid
 			// walk-path fallback limiting the distance
 			pf.hid.Click(game.RightButton, screenX, screenY)
 			return
 		}
 	}
-	// If we get here, no valid on-screen point was found
-	slog.Warn("BladeWarp: no valid on-screen target found", slog.Int("pathLen", len(p)))
 }
 
 func (pf *PathFinder) GetLastPathIndexOnScreen(p Path) int {

@@ -1,7 +1,6 @@
 package game
 
 import (
-	"log/slog"
 	"math"
 	"sort"
 	"strings"
@@ -145,14 +144,12 @@ func (d Data) CanBladeWarp() bool {
 	// Check if BladeWarp skill is bound
 	_, isBound := d.KeyBindings.KeyBindingForSkill(skill.BladeWarp)
 	if !isBound {
-		slog.Info("CanBladeWarp: FALSE - BladeWarp not bound to any key")
 		return false
 	}
 
 	// Check mana (need enough to cast)
 	currentMana, foundMana := d.PlayerUnit.FindStat(stat.Mana, 0)
 	if !foundMana || currentMana.Value < 5 {
-		slog.Info("CanBladeWarp: FALSE - insufficient mana", slog.Int("mana", currentMana.Value))
 		return false
 	}
 
