@@ -266,6 +266,9 @@ func (pf *PathFinder) MoveCharacter(x, y int, gamePos ...data.Position) {
 		} else {
 			pf.hid.Click(game.RightButton, x, y)
 		}
+	} else if pf.data.CanBladeWarp() {
+		// BladeWarp uses right-click cast like teleport, but follows walking paths
+		pf.hid.Click(game.RightButton, x, y)
 	} else {
 		pf.hid.MovePointer(x, y)
 		pf.hid.PressKeyBinding(pf.data.KeyBindings.ForceMove)
