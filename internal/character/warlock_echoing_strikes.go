@@ -123,8 +123,17 @@ func (s WarlockEchoingStrikes) KillMonsterSequence(
 			return nil
 		}
 
+		// Log target info for debugging summon targeting issues
+		s.Logger.Debug("Targeting monster",
+			slog.Int("npcID", int(monster.Name)),
+			slog.String("type", string(monster.Type)),
+			slog.Int("unitID", int(monster.UnitID)),
+			slog.Bool("shouldIgnore", s.ShouldIgnoreMonster(monster)),
+		)
+
 		// Skip our own summons that may have slipped through the monster selector
 		if s.ShouldIgnoreMonster(monster) {
+			s.Logger.Info("Skipping own summon", slog.Int("npcID", int(monster.Name)))
 			completedAttackLoops++
 			continue
 		}

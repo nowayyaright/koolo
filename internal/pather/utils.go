@@ -78,6 +78,8 @@ func (pf *PathFinder) OptimizeRoomsTraverseOrder() []data.Room {
 func (pf *PathFinder) MoveThroughPath(p Path, walkDuration time.Duration) {
 	if pf.data.CanTeleport() {
 		pf.moveThroughPathTeleport(p)
+	} else if pf.data.CanBladeWarp() {
+		pf.moveThroughPathBladeWarp(p)
 	} else {
 		pf.moveThroughPathWalk(p, walkDuration)
 	}
@@ -155,6 +157,34 @@ func (pf *PathFinder) moveThroughPathTeleport(p Path) {
 			} else {
 				pf.MoveCharacter(screenX, screenY)
 			}
+			return
+		}
+	}
+}
+
+func (pf *PathFinder) moveThroughPathBladeWarp(p Path) {
+	// BladeWarp is like teleport but can't pass walls, so use a shorter max distance
+	// and never use packet casting
+	hudBoundary := int(float32(pf.gr.GameAreaSizeY) / 1.19)
+	fromX, fromY := p.From().X, p.From().Y
+
+	// Limit BladeWarp distance to avoid warping into walls
+	maxBladeWarpDistance := 20
+	startIdx := len(p) - 1
+	if startIdx > maxBladeWarpDistance {
+		startIdx = maxBladeWarpDistance
+	}
+
+	for i := startIdx; i >= 0; i-- {
+		pos := p[i]
+		screenX, screenY := pf.gameCoordsToScreenCords(fromX, fromY, pos.X, pos.Y)
+
+		if screenY > hudBoundary {
+			continue
+		}
+
+		if screenX >= 0 && screenY >= 0 && screenX <= pf.gr.GameAreaSizeX && screenY <= pf.gr.GameAreaSizeY {
+			pf.MoveCharacter(screenX, screenY)
 			return
 		}
 	}
