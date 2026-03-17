@@ -27,6 +27,7 @@ const (
 
 type WarlockEchoingStrikes struct {
 	BaseCharacter
+	blacklistedUnits map[data.UnitID]bool // Monsters that couldn't be damaged (e.g. Bind Demon converts)
 }
 
 func (s WarlockEchoingStrikes) ShouldIgnoreMonster(m data.Monster) bool {
@@ -43,6 +44,11 @@ func (s WarlockEchoingStrikes) ShouldIgnoreMonster(m data.Monster) bool {
 	// Warlock individual summon skills (SummonGoatman/Tainted/Defiler)
 	switch m.Name {
 	case npc.WarGoatman, npc.Tainted3, npc.WarDefiler:
+		return true
+	}
+
+	// Skip monsters blacklisted as undamageable (Bind Demon converts with no detectable state)
+	if s.blacklistedUnits != nil && s.blacklistedUnits[m.UnitID] {
 		return true
 	}
 
@@ -108,6 +114,7 @@ func (s WarlockEchoingStrikes) KillMonsterSequence(
 		if !found {
 			return nil
 		}
+
 		if previousUnitID != int(id) {
 			completedAttackLoops = 0
 		}
@@ -117,6 +124,8 @@ func (s WarlockEchoingStrikes) KillMonsterSequence(
 		}
 
 		if completedAttackLoops >= echoingStrikesMaxAttacksLoop {
+			s.Logger.Info("Max attack loops reached, blacklisting monster", slog.Int("npcID", int(id)))
+			s.blacklistedUnits[id] = true
 			return nil
 		}
 
