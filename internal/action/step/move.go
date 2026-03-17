@@ -3,6 +3,7 @@ package step
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -159,6 +160,17 @@ func MoveTo(dest data.Position, options ...MoveOption) error {
 	}
 
 	startArea := ctx.Data.PlayerUnit.Area
+
+	// One-time diagnostic for BladeWarp movement
+	if !ctx.Data.PlayerUnit.Area.IsTown() {
+		_, bwBound := ctx.Data.KeyBindings.KeyBindingForSkill(skill.BladeWarp)
+		ctx.Logger.Info("MoveTo diagnostic",
+			slog.Bool("canTeleport", ctx.Data.CanTeleport()),
+			slog.Bool("canBladeWarp", ctx.Data.CanBladeWarp()),
+			slog.Bool("bladeWarpBound", bwBound),
+			slog.String("area", ctx.Data.PlayerUnit.Area.Area().Name),
+		)
+	}
 
 	for {
 		ctx.PauseIfNotPriority()
