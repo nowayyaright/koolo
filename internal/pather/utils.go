@@ -163,19 +163,12 @@ func (pf *PathFinder) moveThroughPathTeleport(p Path) {
 }
 
 func (pf *PathFinder) moveThroughPathBladeWarp(p Path) {
-	// BladeWarp is like teleport but can't pass walls, so use a shorter max distance
-	// and never use packet casting
+	// BladeWarp follows walking paths (wall-safe), so use full path distance like teleport.
+	// The path is already computed along walkable tiles, no need for an artificial cap.
 	hudBoundary := int(float32(pf.gr.GameAreaSizeY) / 1.19)
 	fromX, fromY := p.From().X, p.From().Y
 
-	// Limit BladeWarp distance to avoid warping into walls
-	maxBladeWarpDistance := 20
-	startIdx := len(p) - 1
-	if startIdx > maxBladeWarpDistance {
-		startIdx = maxBladeWarpDistance
-	}
-
-	for i := startIdx; i >= 0; i-- {
+	for i := len(p) - 1; i >= 0; i-- {
 		pos := p[i]
 		screenX, screenY := pf.gameCoordsToScreenCords(fromX, fromY, pos.X, pos.Y)
 
