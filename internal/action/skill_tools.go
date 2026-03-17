@@ -326,6 +326,11 @@ func EnsureSkillBindings() error {
 	var skillsToBind []skill.ID
 	if isLevelingChar {
 		mainSkill, skillsToBind = char.SkillsToBind()
+	} else if binder, ok := ctx.Char.(interface {
+		SkillsToBind() (skill.ID, []skill.ID)
+	}); ok {
+		// Non-leveling character that still wants auto-binding (e.g. WarlockEchoingStrikes)
+		mainSkill, skillsToBind = binder.SkillsToBind()
 	} else {
 		skillsToBind = ctx.Char.CheckKeyBindings()
 	}
@@ -468,7 +473,7 @@ func EnsureSkillBindings() error {
 			}
 		}
 	}
-	if isLevelingChar {
+	if isLevelingChar || mainSkill != 0 {
 		mainSkillExists := false
 		if mainSkill == skill.TomeOfTownPortal {
 			mainSkillExists = true
