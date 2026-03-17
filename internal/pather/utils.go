@@ -163,8 +163,8 @@ func (pf *PathFinder) moveThroughPathTeleport(p Path) {
 }
 
 func (pf *PathFinder) moveThroughPathBladeWarp(p Path) {
-	// BladeWarp follows walking paths (wall-safe), so use full path distance like teleport.
-	// The path is already computed along walkable tiles, no need for an artificial cap.
+	// BladeWarp uses teleport-style pathing (crosses gaps) but can't pass walls.
+	// Click the farthest on-screen point along the path, same as teleport.
 	hudBoundary := int(float32(pf.gr.GameAreaSizeY) / 1.19)
 	fromX, fromY := p.From().X, p.From().Y
 
@@ -172,6 +172,9 @@ func (pf *PathFinder) moveThroughPathBladeWarp(p Path) {
 		slog.Int("pathLen", len(p)),
 		slog.Int("fromX", fromX),
 		slog.Int("fromY", fromY),
+		slog.Int("gameAreaX", pf.gr.GameAreaSizeX),
+		slog.Int("gameAreaY", pf.gr.GameAreaSizeY),
+		slog.Int("hudBoundary", hudBoundary),
 	)
 
 	for i := len(p) - 1; i >= 0; i-- {
@@ -183,13 +186,20 @@ func (pf *PathFinder) moveThroughPathBladeWarp(p Path) {
 		}
 
 		if screenX >= 0 && screenY >= 0 && screenX <= pf.gr.GameAreaSizeX && screenY <= pf.gr.GameAreaSizeY {
+			// Calculate actual Euclidean tile distance from player
+			dx := float64(pos.X - fromX)
+			dy := float64(pos.Y - fromY)
+			tileDist := int(math.Sqrt(dx*dx + dy*dy))
+
 			slog.Debug("BladeWarp casting to",
 				slog.Int("pathIdx", i),
-				slog.Int("tileDistance", i),
+				slog.Int("tileDist", tileDist),
 				slog.Int("screenX", screenX),
 				slog.Int("screenY", screenY),
 				slog.Int("destX", pos.X),
 				slog.Int("destY", pos.Y),
+				slog.Int("diffX", pos.X-fromX),
+				slog.Int("diffY", pos.Y-fromY),
 			)
 			pf.MoveCharacter(screenX, screenY)
 			return
@@ -274,8 +284,9 @@ func (pf *PathFinder) MoveCharacter(x, y int, gamePos ...data.Position) {
 			pf.hid.Click(game.RightButton, x, y)
 		}
 	} else if pf.data.CanBladeWarp() {
-		// BladeWarp uses right-click cast like teleport, but follows walking paths
+		// BladeWarp: cast + projectile travel time before character warps
 		pf.hid.Click(game.RightButton, x, y)
+		utils.Sleep(800)
 	} else {
 		pf.hid.MovePointer(x, y)
 		pf.hid.PressKeyBinding(pf.data.KeyBindings.ForceMove)
