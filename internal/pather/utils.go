@@ -168,6 +168,12 @@ func (pf *PathFinder) moveThroughPathBladeWarp(p Path) {
 	hudBoundary := int(float32(pf.gr.GameAreaSizeY) / 1.19)
 	fromX, fromY := p.From().X, p.From().Y
 
+	slog.Debug("BladeWarp path info",
+		slog.Int("pathLen", len(p)),
+		slog.Int("fromX", fromX),
+		slog.Int("fromY", fromY),
+	)
+
 	for i := len(p) - 1; i >= 0; i-- {
 		pos := p[i]
 		screenX, screenY := pf.gameCoordsToScreenCords(fromX, fromY, pos.X, pos.Y)
@@ -177,6 +183,14 @@ func (pf *PathFinder) moveThroughPathBladeWarp(p Path) {
 		}
 
 		if screenX >= 0 && screenY >= 0 && screenX <= pf.gr.GameAreaSizeX && screenY <= pf.gr.GameAreaSizeY {
+			slog.Debug("BladeWarp casting to",
+				slog.Int("pathIdx", i),
+				slog.Int("tileDistance", i),
+				slog.Int("screenX", screenX),
+				slog.Int("screenY", screenY),
+				slog.Int("destX", pos.X),
+				slog.Int("destY", pos.Y),
+			)
 			pf.MoveCharacter(screenX, screenY)
 			return
 		}
