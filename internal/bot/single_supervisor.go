@@ -17,6 +17,7 @@ import (
 	"github.com/hectorgimenez/koolo/internal/action"
 	"github.com/hectorgimenez/koolo/internal/config"
 	ct "github.com/hectorgimenez/koolo/internal/context"
+	"github.com/hectorgimenez/koolo/internal/character"
 	"github.com/hectorgimenez/koolo/internal/drop"
 	"github.com/hectorgimenez/koolo/internal/event"
 	"github.com/hectorgimenez/koolo/internal/game"
@@ -575,6 +576,7 @@ func (s *SinglePlayerSupervisor) Start() error {
 				gameFinishReason = event.FinishedMercChicken
 			case errors.Is(err, health.ErrDied):
 				gameFinishReason = event.FinishedDied
+				character.ResetBindDemonState()
 			default:
 				gameFinishReason = event.FinishedError
 			}

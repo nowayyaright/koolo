@@ -26,9 +26,22 @@ const (
 	echoingStrikesNoDmgLimit    = 2 // Blacklist after this many attack loops with no HP change
 )
 
+// Package-level Bind Demon state — persists across games within the session.
+// Only resets on player death (new demon needed).
+var (
+	bindDemonBlacklist = make(map[data.UnitID]bool)
+	hasBoundDemon      bool
+)
+
+// ResetBindDemonState clears the Bind Demon blacklist and flag.
+// Call this when the player dies and needs a new demon.
+func ResetBindDemonState() {
+	bindDemonBlacklist = make(map[data.UnitID]bool)
+	hasBoundDemon = false
+}
+
 type WarlockEchoingStrikes struct {
 	BaseCharacter
-	blacklistedUnits map[data.UnitID]bool // Monsters that couldn't be damaged (e.g. Bind Demon converts)
 }
 
 func (s WarlockEchoingStrikes) ShouldIgnoreMonster(m data.Monster) bool {
@@ -49,7 +62,7 @@ func (s WarlockEchoingStrikes) ShouldIgnoreMonster(m data.Monster) bool {
 	}
 
 	// Skip monsters blacklisted as undamageable (Bind Demon converts with no detectable state)
-	if s.blacklistedUnits != nil && s.blacklistedUnits[m.UnitID] {
+	if bindDemonBlacklist[m.UnitID] {
 		return true
 	}
 
@@ -130,7 +143,7 @@ func (s WarlockEchoingStrikes) KillMonsterSequence(
 
 		if completedAttackLoops >= echoingStrikesMaxAttacksLoop {
 			s.Logger.Info("Max attack loops reached, blacklisting monster", slog.Int("npcID", int(id)))
-			s.blacklistedUnits[id] = true
+			bindDemonBlacklist[id] = true
 			return nil
 		}
 
@@ -152,9 +165,22 @@ func (s WarlockEchoingStrikes) KillMonsterSequence(
 
 		// Skip our own summons that may have slipped through the monster selector
 		if s.ShouldIgnoreMonster(monster) {
-			s.Logger.Info("Skipping own summon", slog.Int("npcID", int(monster.Name)))
+			s.Logger.Info("Skipping ignored monster", slog.Int("npcID", int(monster.Name)))
 			completedAttackLoops++
 			continue
+		}
+
+		// Cast Bind Demon on Hephasto if we don't have an active bound demon
+		if !hasBoundDemon && monster.Name == npc.Hephasto &&
+			s.Data.PlayerUnit.Skills[skill.BindDemon].Level > 0 {
+			manaCheck, _ := s.Data.PlayerUnit.FindStat(stat.Mana, 0)
+			if manaCheck.Value > 5 {
+				s.Logger.Info("Casting Bind Demon on Hephasto", slog.Int("unitID", int(id)))
+				step.SecondaryAttack(skill.BindDemon, id, 1, step.Distance(echoingStrikesMinDistance, echoingStrikesMaxDistance))
+				hasBoundDemon = true
+				bindDemonBlacklist[id] = true
+				continue
+			}
 		}
 
 		// Track HP to detect undamageable monsters (Bind Demon converts)
@@ -167,7 +193,7 @@ func (s WarlockEchoingStrikes) KillMonsterSequence(
 					slog.Int("unitID", int(id)),
 					slog.Int("hp", currentHP),
 				)
-				s.blacklistedUnits[id] = true
+				bindDemonBlacklist[id] = true
 				return nil
 			}
 		} else {

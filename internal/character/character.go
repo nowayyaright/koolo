@@ -75,7 +75,7 @@ func BuildCharacter(ctx *context.Context) (context.Character, error) {
 	case "whirlwind_barb":
 		return &WhirlwindBarb{BaseCharacter: bc}, nil
 	case "echoing_strikes":
-		return &WarlockEchoingStrikes{BaseCharacter: bc, blacklistedUnits: make(map[data.UnitID]bool)}, nil
+		return &WarlockEchoingStrikes{BaseCharacter: bc}, nil
 	case "development":
 		return DevelopmentCharacter{BaseCharacter: bc}, nil
 	}
