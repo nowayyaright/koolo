@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/hectorgimenez/d2go/pkg/data"
+	"github.com/hectorgimenez/d2go/pkg/data/item"
 	"github.com/hectorgimenez/d2go/pkg/data/npc"
 	"github.com/hectorgimenez/d2go/pkg/data/skill"
 	"github.com/hectorgimenez/d2go/pkg/data/stat"
@@ -104,6 +105,29 @@ func (s WarlockEchoingStrikes) CheckKeyBindings() []skill.ID {
 	}
 
 	return missingKeybindings
+}
+
+func (s WarlockEchoingStrikes) SkillsToBind() (skill.ID, []skill.ID) {
+	mainSkill := skill.EchoingStrike
+	skillBindings := []skill.ID{
+		skill.SigilLethargy,
+		skill.BladeWarp,
+		skill.BindDemon,
+	}
+
+	if s.Data.PlayerUnit.Skills[skill.BattleCommand].Level > 0 {
+		skillBindings = append(skillBindings, skill.BattleCommand)
+	}
+	if s.Data.PlayerUnit.Skills[skill.BattleOrders].Level > 0 {
+		skillBindings = append(skillBindings, skill.BattleOrders)
+	}
+
+	_, found := s.Data.Inventory.Find(item.TomeOfTownPortal, item.LocationInventory)
+	if found {
+		skillBindings = append(skillBindings, skill.TomeOfTownPortal)
+	}
+
+	return mainSkill, skillBindings
 }
 
 func (s WarlockEchoingStrikes) BuffSkills() []skill.ID {
