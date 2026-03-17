@@ -34,12 +34,15 @@ func (s WarlockEchoingStrikes) ShouldIgnoreMonster(m data.Monster) bool {
 		return true
 	}
 
-	// Warlock summons (Bind Demon) are not in d2go's IsPet() list
-	switch m.Name {
-	case npc.WarGoatman, npc.Tainted3, npc.WarDefiler:
+	// Bind Demon converts a real enemy into a friendly unit.
+	// The converted mob keeps its original NPC ID but gains a BindDemon state.
+	if m.States.HasState(state.BindDemon) || m.States.HasState(state.BindDemonUnderling) {
 		return true
 	}
-	if m.States.HasState(state.BindDemonUnderling) {
+
+	// Warlock individual summon skills (SummonGoatman/Tainted/Defiler)
+	switch m.Name {
+	case npc.WarGoatman, npc.Tainted3, npc.WarDefiler:
 		return true
 	}
 
@@ -129,6 +132,8 @@ func (s WarlockEchoingStrikes) KillMonsterSequence(
 			slog.String("type", string(monster.Type)),
 			slog.Int("unitID", int(monster.UnitID)),
 			slog.Bool("shouldIgnore", s.ShouldIgnoreMonster(monster)),
+			slog.Bool("hasBindDemon", monster.States.HasState(state.BindDemon)),
+			slog.Bool("hasBindDemonUnderling", monster.States.HasState(state.BindDemonUnderling)),
 		)
 
 		// Skip our own summons that may have slipped through the monster selector
