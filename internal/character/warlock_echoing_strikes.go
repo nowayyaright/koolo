@@ -18,11 +18,12 @@ import (
 )
 
 const (
-	echoingStrikesMaxAttacksLoop = 15
+	echoingStrikesMaxAttacksLoop = 10
 	echoingStrikesMinDistance    = 5
 	echoingStrikesMaxDistance    = 12
 	echoingStrikesDangerDist    = 4
 	echoingStrikesSafeDist      = 6
+	echoingStrikesNoDmgLimit    = 2 // Blacklist after this many attack loops with no HP change
 )
 
 type WarlockEchoingStrikes struct {
@@ -99,7 +100,9 @@ func (s WarlockEchoingStrikes) KillMonsterSequence(
 	skipOnImmunities []stat.Resist,
 ) error {
 	completedAttackLoops := 0
+	noDamageLoops := 0
 	previousUnitID := 0
+	lastHP := 0
 	var lastReposition time.Time
 	var lastLethargy time.Time
 
@@ -117,6 +120,8 @@ func (s WarlockEchoingStrikes) KillMonsterSequence(
 
 		if previousUnitID != int(id) {
 			completedAttackLoops = 0
+			noDamageLoops = 0
+			lastHP = 0
 		}
 
 		if !s.preBattleChecks(id, skipOnImmunities) {
@@ -151,6 +156,24 @@ func (s WarlockEchoingStrikes) KillMonsterSequence(
 			completedAttackLoops++
 			continue
 		}
+
+		// Track HP to detect undamageable monsters (Bind Demon converts)
+		currentHP := monster.Stats[stat.Life]
+		if lastHP > 0 && currentHP >= lastHP {
+			noDamageLoops++
+			if noDamageLoops >= echoingStrikesNoDmgLimit {
+				s.Logger.Info("No damage dealt, blacklisting monster (likely Bind Demon convert)",
+					slog.Int("npcID", int(monster.Name)),
+					slog.Int("unitID", int(id)),
+					slog.Int("hp", currentHP),
+				)
+				s.blacklistedUnits[id] = true
+				return nil
+			}
+		} else {
+			noDamageLoops = 0
+		}
+		lastHP = currentHP
 
 		mana, _ := s.Data.PlayerUnit.FindStat(stat.Mana, 0)
 
