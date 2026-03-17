@@ -59,7 +59,7 @@ func (pf *PathFinder) GetPath(to data.Position) (Path, int, bool) {
 
 func (pf *PathFinder) GetPathFrom(from, to data.Position) (Path, int, bool) {
 	a := pf.data.AreaData
-	canTeleport := pf.data.CanTeleport()
+	canTeleport := pf.data.CanTeleport() || pf.data.CanBladeWarp()
 
 	// We don't want to modify the original grid
 	grid := a.Grid.Copy()
