@@ -168,7 +168,7 @@ func (pf *PathFinder) moveThroughPathBladeWarp(p Path) {
 	hudBoundary := int(float32(pf.gr.GameAreaSizeY) / 1.19)
 	fromX, fromY := p.From().X, p.From().Y
 
-	slog.Debug("BladeWarp path info",
+	slog.Info("BladeWarp path info",
 		slog.Int("pathLen", len(p)),
 		slog.Int("fromX", fromX),
 		slog.Int("fromY", fromY),
@@ -191,13 +191,12 @@ func (pf *PathFinder) moveThroughPathBladeWarp(p Path) {
 			dy := float64(pos.Y - fromY)
 			tileDist := int(math.Sqrt(dx*dx + dy*dy))
 
-			slog.Debug("BladeWarp casting to",
+			slog.Info("BladeWarp casting",
 				slog.Int("pathIdx", i),
+				slog.Int("pathLen", len(p)),
 				slog.Int("tileDist", tileDist),
 				slog.Int("screenX", screenX),
 				slog.Int("screenY", screenY),
-				slog.Int("destX", pos.X),
-				slog.Int("destY", pos.Y),
 				slog.Int("diffX", pos.X-fromX),
 				slog.Int("diffY", pos.Y-fromY),
 			)
@@ -207,6 +206,8 @@ func (pf *PathFinder) moveThroughPathBladeWarp(p Path) {
 			return
 		}
 	}
+	// If we get here, no valid on-screen point was found
+	slog.Warn("BladeWarp: no valid on-screen target found", slog.Int("pathLen", len(p)))
 }
 
 func (pf *PathFinder) GetLastPathIndexOnScreen(p Path) int {
